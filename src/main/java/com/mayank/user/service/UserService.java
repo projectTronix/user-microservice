@@ -1,5 +1,6 @@
 package com.mayank.user.service;
 
+import com.mayank.user.dto.ForgetPasswordRequest;
 import com.mayank.user.dto.User;
 import com.mayank.user.exception.UserNotFoundException;
 import org.springframework.http.ResponseEntity;
@@ -12,5 +13,6 @@ import java.util.Optional;
 public interface UserService {
     List<User> getAllUsers() throws UserNotFoundException;
     Optional<User> getUserByID(Integer UserId) throws UserNotFoundException;
-    ResponseEntity<String> updatePassword(Integer userID, String newPassword) throws UserNotFoundException;
+
+    Optional<User> getUserByEmail(String email) throws UserNotFoundException;
 }

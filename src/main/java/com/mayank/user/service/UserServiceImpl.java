@@ -4,8 +4,7 @@ import com.mayank.user.dto.User;
 import com.mayank.user.exception.UserNotFoundException;
 import com.mayank.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -15,6 +14,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     public List<User> getAllUsers() throws UserNotFoundException {
@@ -34,15 +34,11 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public ResponseEntity<String> updatePassword(Integer userID, String newPassword) throws UserNotFoundException {
-        try {
-            if(getUserByID(userID).isEmpty()) {
-                throw new UserNotFoundException("Invalid Email ID or password.");
-            }
-            userRepository.updatePasswordByID(newPassword, userID);
-            return new ResponseEntity<>(HttpStatus.OK);
-        } catch(Exception e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+    public Optional<User> getUserByEmail(String email) throws UserNotFoundException {
+        Optional<User> opt = userRepository.findBYEmail(email);
+        if(opt.isEmpty()) {
+            throw new UserNotFoundException("Invalid Email ID.");
         }
+        return opt;
     }
 }
