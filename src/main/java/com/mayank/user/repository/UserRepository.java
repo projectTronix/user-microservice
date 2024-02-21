@@ -15,5 +15,6 @@ public interface UserRepository extends JpaRepository<User, Integer> {
     Optional<User> findBYEmail(@Param("email") String email);
     @Modifying // It means it's not a select statement
     @Query(value = "UPDATE users u SET u.password = :password where u.user_id = :user_id", nativeQuery = true)
-    void updatePasswordByID(@Param("password") String password, @Param("user_id") Integer userID);
+    long updatePasswordByID(@Param("password") String password, @Param("user_id") Integer userID);
+    long deleteByEmail(String email);
 }

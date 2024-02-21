@@ -26,7 +26,7 @@ public class AuthController {
     Logger logger = logManager.getLogger(Logger.GLOBAL_LOGGER_NAME);
 
     @PostMapping("/register")
-    public ResponseEntity<AuthenticationResponse> register(@RequestBody @Valid RegisterRequest request) {
+    public ResponseEntity<?> register(@RequestBody @Valid RegisterRequest request) {
         try {
             String emailID = request.getEmail();
             String password = request.getPassword();
@@ -34,14 +34,15 @@ public class AuthController {
                 logger.log(Level.WARNING, "Email ID or Password is Empty.");
                 throw new Exception("Email ID or Password is Empty.");
             }
+            logger.log(Level.INFO, "User registered successfully.");
             return ResponseEntity.ok(service.register(request));
         } catch(Exception e) {
             logger.log(Level.WARNING, e.getMessage());
-            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>("Encountered a problem while registering user.", HttpStatus.BAD_REQUEST);
         }
     }
     @PostMapping("/login")
-    public ResponseEntity<AuthenticationResponse> authenticate(@RequestBody AuthenticationRequest request) {
+    public ResponseEntity<?> authenticate(@RequestBody @Valid AuthenticationRequest request) {
         try {
             String emailID = request.getEmail();
             String password = request.getPassword();
@@ -49,27 +50,24 @@ public class AuthController {
                 logger.log(Level.WARNING, "Email ID or Password is Empty.");
                 throw new Exception("Email ID or Password is Empty.");
             }
+            logger.log(Level.INFO, "User Logged in successfully.");
             return ResponseEntity.ok(service.authenticate(request));
         } catch(Exception e) {
             logger.log(Level.WARNING, e.getMessage());
-            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>("Invalid Credentials. Please Try again.", HttpStatus.BAD_REQUEST);
         }
     }
-    @PutMapping("/forget_password")
-    public ResponseEntity<String> resetPassword(@RequestBody ForgetPasswordRequest request) {
+    @PutMapping("/reset_password")
+    public CustomResponse resetPassword(@RequestBody @Valid ForgetPasswordRequest request) {
         try {
-            Optional<User> user = userService.getUserByEmail(request.getEmail());
-            if(user.isEmpty()) {
-                return new ResponseEntity<>("User not found.", HttpStatus.NOT_FOUND);
+            User user = userService.getUserByEmail(request.getEmail());
+            boolean status = service.updatePassword(user.getId(), request);
+            if(!status) {
+                throw new Exception();
             }
-            ResponseEntity<String> response = service.updatePassword(user.get().getId(), request);
-            if(response.getStatusCode() == HttpStatus.BAD_REQUEST) {
-                logger.log(Level.WARNING, "Encountered a problem while updating password.");
-                throw new Exception("Encountered a problem while updating password.");
-            }
-            return new ResponseEntity<>("password updated successfully.", HttpStatus.OK);
+            return new CustomResponse("password updated successfully.", HttpStatus.OK);
         } catch (Exception e) {
-            return new ResponseEntity<>("Encountered a problem while updating password.", HttpStatus.BAD_REQUEST);
+            return new CustomResponse("Encountered a problem while updating password.", HttpStatus.BAD_REQUEST);
         }
     }
 }

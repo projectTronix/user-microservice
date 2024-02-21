@@ -1,5 +1,6 @@
 package com.mayank.user.config;
 
+import com.mayank.user.dto.Role;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -18,7 +19,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfiguration {
     private static final String[] WHITE_LIST_URL = {"/auth/**",
             "/swagger-ui.html"};
-    private static final String[] ADMIN_URL = {"/users/all"};
+    private static final String[] ADMIN_URL = {"/users/all", "/users/info/**", "/users/delete"};
     private final JwtAuthenticationFilter jwtAuthFilter;
     private final AuthenticationProvider authenticationProvider;
 
@@ -31,6 +32,7 @@ public class SecurityConfiguration {
                 .authorizeHttpRequests()
                 .requestMatchers(WHITE_LIST_URL)
                 .permitAll()
+                .requestMatchers(ADMIN_URL).hasAnyAuthority(Role.ADMIN.name())
                 .anyRequest()
                 .authenticated()
                 .and()

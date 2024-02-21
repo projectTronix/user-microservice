@@ -1,97 +1,84 @@
 package com.mayank.user.controller;
 
 import com.mayank.user.dto.Address;
+import com.mayank.user.dto.CustomResponse;
+import com.mayank.user.dto.DeleteAddressRequest;
 import com.mayank.user.dto.User;
-import com.mayank.user.exception.UserNotFoundException;
 import com.mayank.user.service.AddressService;
 import com.mayank.user.service.UserService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.lang.NonNull;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
 @Validated
+@RequiredArgsConstructor
 @RestController
 public class AddressController {
-    UserService userService;
-    AddressService addressService;
+    private final AddressService addressService;
+    private final UserService userService;
     LogManager logManager = LogManager.getLogManager();
     Logger logger = logManager.getLogger(Logger.GLOBAL_LOGGER_NAME);
-    @Autowired
-    public AddressController(AddressService addressService, UserService userService) {
-        this.addressService = addressService;
-        this.userService = userService;
-    }
 
-    @PostMapping("users/{id}/addresses/add")
-    public ResponseEntity<?> addAddress(@RequestBody @Valid Address address, @PathVariable(name = "id") Integer userId) {
+    @PostMapping("users/addresses/add")
+    public CustomResponse addAddress(@RequestBody @Valid Address address, @NonNull HttpServletRequest request) {
         try {
-            Optional<User> opt = userService.getUserByID(userId);
-            if(!opt.isPresent()) {
-                throw new UserNotFoundException("Invalid Email ID or password.");
-            }
-            User user = opt.get();
             if(address.getCity().isBlank() || address.getPinCode().isBlank() || address.getLoc().isBlank() || address.getState().isBlank()) {
                 logger.log(Level.WARNING, "Address Field(s) Empty.");
                 throw new Exception("Address Field(s) Empty.");
             }
-            address.setUser(user);
-            ResponseEntity<String> response = addressService.saveAddress(user, address);
+            String userEmail = userService.extractEmailFromRequest(request);
+            User user = userService.getUserByEmail(userEmail);
+            boolean status = addressService.saveAddress(user.getId(), address);
+            if(!status) {
+                throw new Exception();
+            }
             logger.log(Level.INFO, "Address added Successfully.");
-            return new ResponseEntity<>(address, HttpStatus.CREATED);
-        } catch (UserNotFoundException e) {
-            logger.log(Level.WARNING, e.getMessage());
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
-        }
-        catch(Exception e) {
-            logger.log(Level.WARNING, e.getMessage());
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+            return new CustomResponse("Address added Successfully.", HttpStatus.CREATED);
+        } catch(Exception e) {
+            logger.log(Level.WARNING, "Encountered a problem while adding address. - {}", e.getMessage());
+            return new CustomResponse("Encountered a problem while adding address.", HttpStatus.BAD_REQUEST);
         }
     }
-    @GetMapping("users/{id}/addresses/view")
-    public ResponseEntity<List<Address>> getAllAddresses(@PathVariable(name = "id") Integer userID) {
+    @GetMapping("users/addresses/view")
+    public ResponseEntity<List<Address>> getAllAddresses(@NonNull HttpServletRequest request) {
         try {
-            Optional<User> opt = userService.getUserByID(userID);
-            if(!opt.isPresent()) {
-                throw new UserNotFoundException("Invalid Email ID or password.");
-            }
-            User user = opt.get();
-            return new ResponseEntity<>(addressService.getAllAddresses(user.getId()), HttpStatus.OK);
+            String userEmail = userService.extractEmailFromRequest(request);
+            User user = userService.getUserByEmail(userEmail);
+            List<Address> addresses = addressService.getAllAddresses(user.getId());
+            logger.log(Level.INFO, "Addresses of user fetched Successfully.");
+            return new ResponseEntity<>(addresses, HttpStatus.OK);
         } catch(Exception e) {
-            e.printStackTrace();
+            logger.log(Level.WARNING, "Encountered a problem while fetching addresses of user - {}",e.getMessage());
             return new ResponseEntity<>(new ArrayList<>(), HttpStatus.OK);
         }
     }
-    @DeleteMapping("users/{id}/addresses/{addressID}")
-    public ResponseEntity<?> deleteAddress(@PathVariable(name = "id") Integer userId, @PathVariable(name = "addressID") Integer addressID) {
+    @DeleteMapping("users/addresses/delete")
+    public CustomResponse deleteAddress(@NonNull HttpServletRequest request, @RequestBody @Valid DeleteAddressRequest deleteAddressRequest) {
         try {
-            Optional<User> opt = userService.getUserByID(userId);
-            if(!opt.isPresent()) {
-                throw new UserNotFoundException("Invalid Email ID or password.");
+            Integer addressID = deleteAddressRequest.getAddressID();
+            String userEmail = userService.extractEmailFromRequest(request);
+            User user = userService.getUserByEmail(userEmail);
+            boolean status = addressService.deleteAddress(user.getId(), addressID);
+            if(!status) {
+                throw new Exception();
             }
-            if(!addressService.findAddressByID(addressID).isPresent()) {
-                throw new Exception("Address not found.");
-            }
-            User user = opt.get();
-            ResponseEntity<String> response = addressService.deleteAddress(userId, addressID);
             logger.log(Level.INFO, "Address deleted Successfully.");
-            return new ResponseEntity<>("Address deleted successfully.", HttpStatus.CREATED);
-        } catch (UserNotFoundException e) {
-            logger.log(Level.WARNING, e.getMessage());
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+            return new CustomResponse("Address deleted successfully.", HttpStatus.OK);
         }
         catch(Exception e) {
-            logger.log(Level.WARNING, e.getMessage());
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+            logger.log(Level.WARNING, "Encountered a problem while deleting the address of user. - deleteAddress in AddressController " + e.getMessage());
+            return new CustomResponse("Encountered a problem while deleting the address of user.", HttpStatus.BAD_REQUEST);
         }
     }
 }
