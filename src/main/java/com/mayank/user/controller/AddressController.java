@@ -63,13 +63,12 @@ public class AddressController {
             return new ResponseEntity<>(new ArrayList<>(), HttpStatus.OK);
         }
     }
-    @DeleteMapping("users/addresses/delete")
-    public CustomResponse deleteAddress(@NonNull HttpServletRequest request, @RequestBody @Valid DeleteAddressRequest deleteAddressRequest) {
+    @DeleteMapping("users/addresses/delete/{id}")
+    public CustomResponse deleteAddress(@NonNull HttpServletRequest request, @PathVariable("id") Integer addressId) {
         try {
-            Integer addressID = deleteAddressRequest.getAddressID();
             String userEmail = userService.extractEmailFromRequest(request);
             User user = userService.getUserByEmail(userEmail);
-            boolean status = addressService.deleteAddress(user.getId(), addressID);
+            boolean status = addressService.deleteAddress(user.getId(), addressId);
             if(!status) {
                 throw new Exception();
             }

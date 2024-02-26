@@ -19,7 +19,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfiguration {
     private static final String[] WHITE_LIST_URL = {"/auth/**",
             "/swagger-ui.html"};
-    private static final String[] ADMIN_URL = {"/users/all", "/users/info/**", "/users/delete"};
+    private static final String[] ADMIN_URL = {"/users/all", "/users/info/**", "/users/delete/**"};
     private final JwtAuthenticationFilter jwtAuthFilter;
     private final AuthenticationProvider authenticationProvider;
 

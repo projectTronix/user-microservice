@@ -49,9 +49,6 @@ public class AddressServiceImpl implements AddressService {
     public Optional<Address> findAddressByID(Integer addressID) throws Exception {
         try {
             Optional<Address> opt = addressRepository.findById(addressID);
-            if(opt.isEmpty()) {
-                throw new Exception("Address not found.");
-            }
             return opt;
         } catch(Exception e) {
             logger.log(Level.WARNING, "Encountered a problem while fetching address by address ID -- findAddressByID in AddressService. - " + e.getMessage());
@@ -60,18 +57,14 @@ public class AddressServiceImpl implements AddressService {
     }
     public boolean deleteAddress(Integer userId, Integer addressID) throws Exception {
         try {
-            User user = userService.getUserByID(userId);
             if(findAddressByID(addressID).isEmpty()) {
                 return false;
             }
             addressRepository.deleteById(addressID);
-            if(findAddressByID(addressID).isEmpty()) {
-                return true;
-            }
-            return false;
+            return findAddressByID(addressID).isEmpty();
         } catch(Exception e) {
-            logger.log(Level.WARNING, e.getMessage());
-            throw new Exception(e.getMessage());
+            logger.log(Level.WARNING, "Encountered a problem while deleting address -- deleteAddress in AddressService. - " + e.getMessage());
+            throw new Exception("Error while deleting address.");
         }
     }
 }

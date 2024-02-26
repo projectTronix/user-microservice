@@ -10,7 +10,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
@@ -55,19 +54,6 @@ public class AuthController {
         } catch(Exception e) {
             logger.log(Level.WARNING, e.getMessage());
             return new ResponseEntity<>("Invalid Credentials. Please Try again.", HttpStatus.BAD_REQUEST);
-        }
-    }
-    @PutMapping("/reset_password")
-    public CustomResponse resetPassword(@RequestBody @Valid ForgetPasswordRequest request) {
-        try {
-            User user = userService.getUserByEmail(request.getEmail());
-            boolean status = service.updatePassword(user.getId(), request);
-            if(!status) {
-                throw new Exception();
-            }
-            return new CustomResponse("password updated successfully.", HttpStatus.OK);
-        } catch (Exception e) {
-            return new CustomResponse("Encountered a problem while updating password.", HttpStatus.BAD_REQUEST);
         }
     }
 }

@@ -44,7 +44,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             throw new Exception(e.getMessage());
         }
     }
-
     @Override
     public AuthenticationResponse authenticate(AuthenticationRequest request) throws Exception {
         try {
@@ -65,7 +64,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         }
     }
     @Override
-    public boolean updatePassword(Integer userID, @Valid ForgetPasswordRequest request) throws Exception {
+    public boolean updatePassword(Integer userID, @Valid ResetPasswordRequest request) throws Exception {
         try {
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
