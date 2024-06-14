@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
-
+@CrossOrigin("*")
 @Validated
 @RestController
 @RequestMapping("auth/")
